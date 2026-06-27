@@ -99,6 +99,17 @@ The classification contract (preserved from the legacy system):
 | `tests/` | pytest suites (TDD) mirroring every service + in-process E2E |
 | `dataset-regenerate/` | Pre-existing synthetic-dataset generator (unchanged) |
 
+## Documentation
+
+Detailed docs live in [`docs/`](docs/):
+
+- [Architecture](docs/architecture.md) — services, the synchronous request flow, hybrid retrieval, design decisions
+- [Configuration](docs/configuration.md) — every `HRF_*` environment variable
+- [API reference](docs/api-reference.md) — all service endpoints with examples
+- [Development](docs/development.md) — setup, TDD layout, conventions, gotchas
+- [Deployment](docs/deployment.md) — Docker, the GPU-free CI profile, seeding, production notes
+- [Admin & scheduling](docs/admin-and-scheduling.md) — admin panel, editable sources, the per-source scheduler
+
 ## Quick start (Docker)
 
 ```bash
