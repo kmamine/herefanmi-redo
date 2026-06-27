@@ -1,0 +1,4 @@
+Here is my analysis:
+```json
+{"medical": "True", "news": "False", "label": "Trustworthy", "reasoning": "Consistent with clinical guidance.", "sources": []}
+```

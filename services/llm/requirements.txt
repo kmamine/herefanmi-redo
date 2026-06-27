@@ -1,0 +1,6 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+openai>=1.30
+pydantic>=2.6
+pydantic-settings>=2.2
+# hrf_shared is installed from ../../shared in the Docker build
