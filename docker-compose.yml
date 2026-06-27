@@ -1,0 +1,122 @@
+# HeReFaNMi full stack.
+#   docker compose up --build
+# The LLM service talks to a vLLM server on the HOST (host.docker.internal).
+# For a GPU-free smoke run, use the `ci` profile to start the OpenAI stub:
+#   docker compose --profile ci up --build
+#
+# Seed sample data (sample articles -> SQLite + ChromaDB) as a one-off:
+#   docker compose run --rm seed
+
+services:
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v2/heartbeat')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  scraper:
+    build:
+      context: .
+      dockerfile: services/scraper/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - HRF_SQLITE_PATH=/data/herefanmi.sqlite
+    volumes:
+      - sqlite-data:/data
+
+  rag:
+    build:
+      context: .
+      dockerfile: services/rag/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - HRF_CHROMA_MODE=http
+      - HRF_CHROMA_HOST=chromadb
+      - HRF_CHROMA_PORT=8000
+    depends_on:
+      chromadb:
+        condition: service_healthy
+
+  llm:
+    build:
+      context: .
+      dockerfile: services/llm/Dockerfile
+    ports:
+      - "5002:5002"
+    environment:
+      # Host vLLM Gemma server (override model if it's actually gemma-3n-E4B-it).
+      - HRF_LLM_BASE_URL=${HRF_LLM_BASE_URL:-http://host.docker.internal:50033/v1}
+      - HRF_LLM_MODEL=${HRF_LLM_MODEL:-google/gemma-4-E4B-it}
+      - HRF_LLM_API_KEY=${HRF_LLM_API_KEY:-dummy-key}
+    extra_hosts:
+      # Lets the container reach a vLLM server running on the host (Linux host-gateway).
+      - "host.docker.internal:host-gateway"
+
+  backend:
+    build:
+      context: .
+      dockerfile: services/backend/Dockerfile
+    ports:
+      - "10000:10000"
+    environment:
+      - HRF_RAG_URL=http://rag:5000
+      - HRF_LLM_URL=http://llm:5002
+      - HRF_SQLITE_PATH=/data/herefanmi.sqlite
+      - HRF_JWT_SECRET=${HRF_JWT_SECRET:-change-me-in-production}
+    volumes:
+      - sqlite-data:/data
+    depends_on:
+      - rag
+      - llm
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  # One-off: seed bundled sample data into SQLite + ChromaDB. Uses the rag image.
+  seed:
+    build:
+      context: .
+      dockerfile: services/rag/Dockerfile
+    command: ["python", "ingest/seed_sample_data.py"]
+    environment:
+      - HRF_CHROMA_MODE=http
+      - HRF_CHROMA_HOST=chromadb
+      - HRF_CHROMA_PORT=8000
+      - HRF_SQLITE_PATH=/data/herefanmi.sqlite
+    volumes:
+      - sqlite-data:/data
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    profiles:
+      - tools
+
+  # GPU-free OpenAI-compatible stub (so the stack runs without a real vLLM).
+  # Point the llm service at it: HRF_LLM_BASE_URL=http://llm-stub:50033/v1
+  llm-stub:
+    build:
+      context: .
+      dockerfile: services/llm/Dockerfile
+    command: ["uvicorn", "hrf_llm.stub:app", "--host", "0.0.0.0", "--port", "50033"]
+    ports:
+      - "50033:50033"
+    profiles:
+      - ci
+
+volumes:
+  chroma-data:
+  sqlite-data:

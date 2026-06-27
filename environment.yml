@@ -1,0 +1,44 @@
+# Single conda env for local development and tests across all services.
+#   conda env create -f environment.yml
+#   conda activate herefanmi
+# Heavy ML deps (torch/sentence-transformers/chromadb) are pip-installed for
+# wheel availability and to match the Docker images.
+name: herefanmi
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  # Frontend toolchain (so `npm` works inside the conda env)
+  - nodejs>=20
+  - pip:
+      # shared
+      - pydantic>=2.6
+      - pydantic-settings>=2.2
+      # web services
+      - fastapi>=0.110
+      - "uvicorn[standard]>=0.29"
+      - httpx>=0.27
+      # llm
+      - openai>=1.30
+      # scraper
+      - beautifulsoup4>=4.12
+      - lxml>=5.2
+      - python-dateutil>=2.9
+      - apscheduler>=3.10
+      # storage
+      - SQLAlchemy>=2.0
+      # rag / vector store
+      - chromadb>=0.5.0
+      - sentence-transformers>=2.7
+      - rank-bm25>=0.2.2
+      # backend auth + resilience
+      - bcrypt>=4.0
+      - "python-jose[cryptography]>=3.3"
+      - tenacity>=8.2
+      # dev / test
+      - pytest>=8.0
+      - pytest-asyncio>=0.23
+      - respx>=0.21
+      - ruff>=0.4
+      - black>=24.0

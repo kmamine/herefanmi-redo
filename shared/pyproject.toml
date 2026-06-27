@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hrf-shared"
+version = "0.1.0"
+description = "Shared contracts, config, and utilities for the HeReFaNMi services"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6",
+    "pydantic-settings>=2.2",
+]
+
+[project.optional-dependencies]
+chroma = ["chromadb>=0.5.0", "sentence-transformers>=2.7"]
+
+[tool.setuptools.packages.find]
+include = ["hrf_shared*"]
