@@ -1,0 +1,32 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [
+    ".",
+    "shared",
+    "services/scraper",
+    "services/rag",
+    "services/llm",
+    "services/backend",
+]
+addopts = "-ra -q --import-mode=importlib"
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+markers = [
+    "integration: end-to-end tests that need live services (deselect with '-m \"not integration\"')",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["legacy", "dataset-regenerate"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008"]  # FastAPI uses function calls (Depends/Query) in argument defaults
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+extend-exclude = "legacy|dataset-regenerate"

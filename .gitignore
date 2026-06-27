@@ -1,0 +1,40 @@
+# Legacy reference tree — never tracked (each subdir is its own nested git repo)
+/legacy/
+
+# Runtime data
+/data/*.sqlite
+/data/*.sqlite-*
+/data/chroma/
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+*.egg
+
+# Local HuggingFace model cache (tests/dev)
+.hf_cache/
+
+# Environments / secrets
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
