@@ -33,22 +33,51 @@ Captured from the live app running against the real `google/gemma-4-E4B-it` mode
 
 ## Architecture
 
-```
-Frontend(:3000, React/Vite) ──/api──▶ Backend(:10000, FastAPI orchestrator)
-                                          │  POST /medicalTalk  (JWT)
-                                          ├─ POST /find_similar_chunks ─▶ RAG(:5000)
-                                          │                                 │ ChromaDB hybrid:
-                                          │                                 │  dense(MiniLM) + BM25 → RRF
-                                          │                                 ◀─ top-N chunks + scores
-                                          ├─ POST /predict ──────────────▶ LLM(:5002)
-                                          │                                 │ OpenAI-compatible →
-                                          │                                 │ vLLM Gemma @ host:50033
-                                          │                                 ◀─ classification JSON
-                                          ├─ validate source URLs
-                                          └─ persist → SQLite (history, ratings, points) + JWT auth
+```mermaid
+flowchart TD
+    User([User]):::actor -->|browser| FE["Frontend · :3000<br/>React + Vite + TS"]
+    Admin([Admin]):::actor --> FE
+    FE -->|"/api · JWT"| BE["Backend · :10000<br/>FastAPI orchestrator"]
 
-Scraper(:8001) ─ harvest 8 health sources → clean → dedup → SQLite
-                 → chunk → embed(MiniLM) → upsert ──▶ ChromaDB(:8000) ◀─ RAG reads
+    BE -->|"POST /find_similar_chunks"| RAG["RAG · :5000<br/>hybrid retrieval"]
+    RAG <-->|"dense MiniLM + BM25 → RRF"| Chroma[("ChromaDB · :8000")]
+    BE -->|"POST /predict"| LLM["LLM · :5002"]
+    LLM <-->|"OpenAI-compatible API"| Gemma[["vLLM Gemma<br/>host · :50033"]]
+    BE <-->|"users · history · points"| SQL[("SQLite")]
+    BE -.->|"admin: manage sources &amp; trigger scrape"| SCR
+
+    subgraph ingest [Knowledge-base ingestion]
+        SCR["Scraper · :8001<br/>+ APScheduler"] -->|"harvest 8 sources → clean → dedup"| ASQL[("SQLite<br/>articles")]
+        SCR -->|"chunk → embed → upsert"| Chroma
+    end
+
+    classDef actor fill:#0891B2,stroke:#164E63,color:#fff;
+```
+
+The in-house path is **synchronous** (unlike the legacy fire-and-forget callback): the Backend awaits RAG, then the LLM, validates sources, persists, and replies.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant FE as Frontend
+    participant BE as Backend
+    participant RAG
+    participant LLM
+    participant Gemma as vLLM Gemma
+    participant DB as SQLite
+
+    User->>FE: enter claim + confidence
+    FE->>BE: POST /medicalTalk (JWT)
+    BE->>RAG: POST /find_similar_chunks
+    RAG-->>BE: top-N chunks + scores
+    BE->>LLM: POST /predict {chunks, question}
+    LLM->>Gemma: chat/completions
+    Gemma-->>LLM: JSON verdict
+    LLM-->>BE: Classification
+    BE->>BE: validate source URLs
+    BE->>DB: persist query, decrement points
+    BE-->>FE: {label, reasoning, sources}
+    FE-->>User: colour-coded verdict card
 ```
 
 The classification contract (preserved from the legacy system):
