@@ -38,3 +38,6 @@ frontend/.vite/
 .DS_Store
 .idea/
 .vscode/
+
+# Raw screenshot scratch folder (curated copies live in docs/screenshots/)
+/screenshots/

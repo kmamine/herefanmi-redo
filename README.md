@@ -9,6 +9,28 @@ It uses **FastAPI** services, **ChromaDB hybrid search** (dense + BM25), **SQLit
 for app data, an **OpenAI-compatible LLM** (a local vLLM Gemma server by default),
 and a **React + Vite + TypeScript** frontend — all dockerized.
 
+## Screenshots
+
+Captured from the live app running against the real `google/gemma-4-E4B-it` model.
+
+**The three verdicts** — every classification is colour- and icon-coded and grounded in retrieved medical sources:
+
+| 🟢 Trustworthy | 🟡 Doubtful | 🔴 Fake |
+|:---:|:---:|:---:|
+| ![Trustworthy verdict](docs/screenshots/04-verdict-trustworthy.png) | ![Doubtful verdict](docs/screenshots/05-verdict-doubtful.png) | ![Fake verdict](docs/screenshots/06-verdict-fake.png) |
+
+**User flow** — sign in, enter a claim and your own confidence, then pick the analysis model:
+
+| Sign in | Check a claim | Choose model |
+|:---:|:---:|:---:|
+| ![Sign in](docs/screenshots/01-login.png) | ![Check a claim](docs/screenshots/02-check-claim.png) | ![Choose model](docs/screenshots/03-model-select.png) |
+
+**Admin panel** — knowledge-base stats, per-source scheduling (enable/pause, interval, add/remove), users, and recent query history:
+
+| Overview &amp; sources | Add a source &amp; history |
+|:---:|:---:|
+| ![Admin panel](docs/screenshots/07-admin-panel.png) | ![Admin: add source and recent queries](docs/screenshots/08-admin-add-source.png) |
+
 ## Architecture
 
 ```
