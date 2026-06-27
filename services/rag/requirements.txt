@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+chromadb>=0.5.0
+sentence-transformers>=2.7
+rank-bm25>=0.2.2
+pydantic>=2.6
+pydantic-settings>=2.2
+# hrf_shared is installed from ../../shared in the Docker build
